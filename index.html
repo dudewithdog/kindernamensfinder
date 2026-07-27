@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kindernamensfinder – Prototyp</title>
+  
+  <style>
+    :root{
+      --bg:#fbf5fa;
+      --paper:#fffdfd;
+      --ink:#2e2330;
+      --muted:#7a6878;
+      --line:#ead6e7;
+      --accent:#b0268f;
+      --accent-dark:#8b1670;
+      --accent-soft:#f8d8f0;
+      --accent-pale:#fdf1fa;
+      --soft:#f7ebf4;
+      --danger:#8b3f46;
+      --shadow:0 12px 30px rgba(176,38,143,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(176,38,143,.08), transparent 28%),
+        radial-gradient(circle at left center, rgba(198,84,160,.06), transparent 22%),
+        linear-gradient(180deg,#fcf7fb 0%,#f8f0f7 100%);
+      color:var(--ink);
+      line-height:1.5;
+    }
+    .page{
+      width:min(1040px,calc(100% - 28px));
+      margin:28px auto 60px;
+    }
+    header{
+      background:linear-gradient(135deg,#fffefe 0%, #fff5fb 100%);
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:30px;
+      margin-bottom:18px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    header::after{
+      content:"";
+      position:absolute;
+      right:-40px;
+      top:-40px;
+      width:180px;
+      height:180px;
+      background:radial-gradient(circle, rgba(176,38,143,.18), rgba(176,38,143,0) 70%);
+      pointer-events:none;
+    }
+    h1,h2,h3{margin:0 0 10px}
+    h1{
+      font-size:clamp(2rem,4vw,3.3rem);
+      line-height:1.05;
+      color:var(--accent-dark);
+      letter-spacing:-0.02em;
+    }
+    h2{
+      font-size:1.35rem;
+      margin-top:0;
+      color:#5d204f;
+    }
+    p{margin:0 0 12px}
+    .note{
+      padding:13px 15px;
+      border-left:4px solid var(--accent);
+      background:linear-gradient(90deg,#fdebf8 0%, #fff7fc 100%);
+      border-radius:12px;
+      margin-top:16px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+    .card{
+      background:linear-gradient(180deg,#fffefe 0%, #fffafb 100%);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:20px;
+      box-shadow:var(--shadow);
+    }
+    .full{grid-column:1/-1}
+    .step{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:32px;height:32px;
+      border-radius:999px;
+      background:linear-gradient(135deg,var(--accent) 0%, #d94ab5 100%);
+      color:white;
+      font-weight:800;
+      margin-right:8px;
+      font-size:.9rem;
+      box-shadow:0 6px 16px rgba(176,38,143,.25);
+    }
+    label{
+      display:block;
+      font-weight:700;
+      margin:12px 0 7px;
+      color:#4f3249;
+    }
+    input[type="text"], textarea, select{
+      width:100%;
+      border:1px solid #e6c9df;
+      border-radius:12px;
+      padding:11px 12px;
+      background:white;
+      color:var(--ink);
+      font:inherit;
+      transition:border-color .15s ease, box-shadow .15s ease;
+    }
+    input[type="text"]:focus, textarea:focus, select:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 4px rgba(176,38,143,.12);
+    }
+    textarea{min-height:84px;resize:vertical}
+    .checks{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:8px;
+    }
+    .checks label{
+      margin:0;
+      font-weight:600;
+      border:1px solid #e8d0e2;
+      padding:8px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      background:white;
+      transition:all .15s ease;
+    }
+    .checks label:hover{
+      border-color:#d983c1;
+      background:#fff4fc;
+      transform:translateY(-1px);
+    }
+    .checks input{
+      margin-right:6px;
+      accent-color: var(--accent);
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:18px;
+    }
+    button{
+      border:0;
+      border-radius:12px;
+      padding:11px 15px;
+      font:inherit;
+      font-weight:750;
+      cursor:pointer;
+      transition:transform .08s ease, box-shadow .15s ease, opacity .15s ease;
+    }
+    button:hover{
+      transform:translateY(-1px);
+    }
+    .primary{
+      background:linear-gradient(135deg,var(--accent) 0%, #cc3fa8 100%);
+      color:white;
+      box-shadow:0 10px 22px rgba(176,38,143,.22);
+    }
+    .secondary{
+      background:#f8edf5;
+      color:#5f3857;
+      border:1px solid #eed5e7;
+    }
+    .danger{
+      background:#f2e3e4;
+      color:var(--danger)
+    }
+    #results,#feedback{display:none}
+    .result-list{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin-top:14px;
+    }
+    .name-card{
+      border:1px solid #efd9e9;
+      background:linear-gradient(180deg,#fffefe 0%, #fff5fb 100%);
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 10px 22px rgba(176,38,143,.08);
+      position:relative;
+      overflow:hidden;
+    }
+    .name-card::before{
+      content:"";
+      position:absolute;
+      inset:0 auto 0 0;
+      width:5px;
+      background:linear-gradient(180deg,var(--accent) 0%, #e68ccc 100%);
+    }
+    .name{
+      font-size:1.42rem;
+      font-weight:850;
+      margin-bottom:6px;
+      color:var(--accent-dark);
+    }
+    .score{
+      font-size:.85rem;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+    .reasons{
+      margin:0;
+      padding-left:18px;
+      color:#4c4350;
+      font-size:.94rem;
+    }
+    .feedback-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    .small{font-size:.9rem;color:var(--muted)}
+    .status{
+      margin-top:12px;
+      font-weight:700;
+      color:var(--accent-dark);
+    }
+    @media(max-width:760px){
+      .grid,.feedback-grid,.result-list{grid-template-columns:1fr}
+      .page{width:min(100% - 18px,1040px);margin-top:10px}
+      header,.card{padding:16px}
+    }
+  </style>
+
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Kindernamensfinder</h1>
+    <p>Ein Prototyp mit magenta-orientiertem Look &amp; Feel, der deine Angaben von oben nach unten gewichtet. Frühe Antworten zählen stärker. Ausgeschlossene Namen werden nie vorgeschlagen.</p>
+    <div class="note">
+      <strong>Prototyp-Hinweis:</strong> Die Logik funktioniert bereits. Der integrierte Namensbestand umfasst 220 Demo-Namen und ist noch keine endgültige redaktionelle Namensdatenbank.
+    </div>
+  </header>
+
+  <section class="grid">
+    <div class="card full">
+      <h2><span class="step">1</span>Welche Namen gefallen dir bereits?</h2>
+      <label for="liked">Namen, getrennt durch Kommas</label>
+      <textarea id="liked" placeholder="z. B. Leo, Emma, Noa"></textarea>
+      <p class="small">Höchste Gewichtung. Der Finder sucht nach ähnlichen Mustern, Längen, Klängen und Stilmerkmalen.</p>
+    </div>
+
+    <div class="card full">
+      <h2><span class="step">2</span>Welche Namen kommen auf keinen Fall infrage?</h2>
+      <label for="blocked">Namen, getrennt durch Kommas</label>
+      <textarea id="blocked" placeholder="z. B. ..."></textarea>
+      <p class="small">Ausschlussregel: Diese Namen werden unabhängig von allen anderen Angaben entfernt.</p>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">3</span>Welche Richtung suchst du?</h2>
+      <div class="checks" id="styleChecks">
+        <label><input type="checkbox" value="klassisch">klassisch</label>
+        <label><input type="checkbox" value="modern">modern</label>
+        <label><input type="checkbox" value="selten">selten</label>
+        <label><input type="checkbox" value="zeitlos">zeitlos</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Spezialisierung</h2>
+      <div class="checks" id="specialChecks">
+        <label><input type="checkbox" value="old_swiss">alte Schweizer Namen & Kurzformen</label>
+      </div>
+      <p class="small">Bevorzugt traditionelle Schweizer Namen sowie gebräuchliche schweizerdeutsche Ruf- und Kurzformen. Kurzform und Langform werden miteinander verknüpft.</p>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">4</span>Sprachliche oder kulturelle Bezüge</h2>
+      <label for="culture">Freie Angabe</label>
+      <input id="culture" type="text" placeholder="z. B. deutsch, italienisch, spanisch, international">
+    </div>
+
+    <div class="card">
+      <h2><span class="step">5</span>Welche Namenslänge gefällt dir?</h2>
+      <p class="small">Mehrere Antworten sind möglich.</p>
+      <div class="checks" id="lengthChecks">
+        <label><input type="checkbox" value="kurz">kurz</label>
+        <label><input type="checkbox" value="mittel">mittel</label>
+        <label><input type="checkbox" value="lang">lang</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">6</span>Anfangsbuchstaben oder Klänge</h2>
+      <label for="sound">Freie Angabe</label>
+      <input id="sound" type="text" placeholder="z. B. L, M, weich, endet auf a">
+    </div>
+
+    <div class="card">
+      <h2><span class="step">7</span>Welche Wirkung soll der Name für dich haben?</h2>
+      <label for="effect">Freie Angabe</label>
+      <input id="effect" type="text" placeholder="z. B. ruhig, stark, freundlich, elegant">
+    </div>
+
+    <div class="card">
+      <h2><span class="step">8</span>Interessen und Hobbys</h2>
+      <label for="hobbies">Freie Angabe</label>
+      <input id="hobbies" type="text" placeholder="z. B. Natur, Tiere, Musik, Reisen">
+      <p class="small">Geringste Gewichtung, aber weiterhin Teil der Empfehlung.</p>
+    </div>
+
+    <div class="card full">
+      <p class="small">Deine Eingaben werden auf diesem Gerät automatisch gespeichert.</p>
+      <div class="actions">
+        <button type="button" class="primary" id="runBtn">Namen finden</button>
+        <button type="button" class="secondary" id="resetBtn">Zurücksetzen</button>
+      </div>
+      <div class="status" id="status" aria-live="polite">Finder wird geladen …</div>
+    </div>
+  </section>
+
+  <section class="card" id="results" style="margin-top:18px">
+    <h2>Vorschläge</h2>
+    <p>Die Reihenfolge ergibt sich aus den gewichteten Übereinstimmungen.</p>
+    <div class="result-list" id="resultList"></div>
+  </section>
+
+  <section class="card" id="feedback" style="margin-top:18px">
+    <h2>Bist du mit dem Ergebnis zufrieden?</h2>
+    <div class="actions">
+      <button type="button" class="primary" id="satisfiedBtn">Ja, damit bin ich zufrieden</button>
+      <button type="button" class="secondary" id="rerunToggle">Noch einmal – aber angepasst</button>
+    </div>
+
+    <div id="rerunBox" style="display:none;margin-top:16px">
+      <div class="feedback-grid">
+        <div>
+          <label for="disturbed">Was hat dich gestört?</label>
+          <textarea id="disturbed" placeholder="z. B. zu modern, zu lang, klanglich nicht passend"></textarea>
+        </div>
+        <div>
+          <label for="boost">Worauf soll der nächste Lauf mehr Gewicht legen?</label>
+          <select id="boost">
+            <option value="">keine zusätzliche Gewichtung</option>
+            <option value="liked">Namen, die mir bereits gefallen</option>
+            <option value="style">Stilrichtung</option>
+            <option value="culture">sprachliche / kulturelle Bezüge</option>
+            <option value="length">Namenslänge</option>
+            <option value="sound">Anfangsbuchstaben / Klänge</option>
+            <option value="effect">Wirkung / Eigenschaften</option>
+            <option value="hobbies">Interessen / Hobbys</option>
+          </select>
+
+          <label for="reduce">Was soll weniger wichtig sein?</label>
+          <select id="reduce">
+            <option value="">nichts</option>
+            <option value="liked">Namen, die mir bereits gefallen</option>
+            <option value="style">Stilrichtung</option>
+            <option value="culture">sprachliche / kulturelle Bezüge</option>
+            <option value="length">Namenslänge</option>
+            <option value="sound">Anfangsbuchstaben / Klänge</option>
+            <option value="effect">Wirkung / Eigenschaften</option>
+            <option value="hobbies">Interessen / Hobbys</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="primary" id="rerunBtn">Neuen Lauf starten</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const NAMES = [{"name":"Leo","style":["modern","zeitlos"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["l","o"]},{"name":"Emma","style":["modern","zeitlos"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["e","a","weich"]},{"name":"Noa","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["n","a","weich"]},{"name":"Mila","style":["modern","zeitlos"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["m","a","weich"]},{"name":"Lina","style":["modern","zeitlos"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Luca","style":["modern","zeitlos"],"culture":["international","italienisch"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Nora","style":["modern","zeitlos"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["n","a","weich"]},{"name":"Elio","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["e","o"]},{"name":"Mara","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["m","a","weich"]},{"name":"Jonas","style":["modern","zeitlos"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["j","s"]},{"name":"Lea","style":["modern","zeitlos"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Adam","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["a","m"]},{"name":"Mia","style":["modern","zeitlos"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["m","a","weich"]},{"name":"Ella","style":["modern","zeitlos"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["e","a","weich"]},{"name":"Theo","style":["modern","zeitlos"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","musik"],"sounds":["t","o"]},{"name":"Lio","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["l","o"]},{"name":"Ava","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["a","a","weich"]},{"name":"Finn","style":["modern"],"culture":["international","nordisch"],"effect":["klar","stark"],"hobbies":["reisen","musik"],"sounds":["f","n"]},{"name":"Alma","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["a","a","weich"]},{"name":"Enzo","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["e","o"]},{"name":"Sofia","style":["modern","zeitlos"],"culture":["international","italienisch","spanisch"],"effect":["weich","freundlich"],"hobbies":["reisen","musik"],"sounds":["s","a","weich"]},{"name":"Mateo","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["m","o"]},{"name":"Clara","style":["modern","klassisch"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","musik"],"sounds":["c","a","weich"]},{"name":"Emil","style":["modern","klassisch"],"culture":["international","deutsch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["e","l"]},{"name":"Lia","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Milo","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["m","o"]},{"name":"Iris","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["i","s"]},{"name":"Nico","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["n","o"]},{"name":"Rosa","style":["modern","klassisch"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["r","a","weich"],"special":["old_swiss"],"aliases":["Rösli"]},{"name":"Levi","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","i","weich"]},{"name":"Elia","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["e","a","weich"]},{"name":"Luna","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Aron","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["a","n"]},{"name":"Nina","style":["modern","klassisch"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["n","a","weich"]},{"name":"Jona","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["j","a","weich"]},{"name":"Maja","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["m","a","weich"]},{"name":"Ari","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["a","i","weich"]},{"name":"Selin","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","musik"],"sounds":["s","n"]},{"name":"Minh","style":["modern"],"culture":["international","vietnamesisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["m","h"]},{"name":"Ivy","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["i","y"]},{"name":"Anna","style":["modern","klassisch"],"culture":["international","deutsch"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["a","a","weich"]},{"name":"Paul","style":["modern","klassisch"],"culture":["international","deutsch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["p","l"]},{"name":"Marie","style":["modern","klassisch"],"culture":["international","deutsch"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["m","e","weich"]},{"name":"Max","style":["modern"],"culture":["international","deutsch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["m","x"]},{"name":"Louis","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["l","s"]},{"name":"Laura","style":["modern","klassisch"],"culture":["international","deutsch"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Elias","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["e","s"]},{"name":"Lena","style":["modern","zeitlos"],"culture":["international","deutsch"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Felix","style":["modern","klassisch"],"culture":["international","deutsch"],"effect":["klar","stark"],"hobbies":["reisen","musik"],"sounds":["f","x"]},{"name":"Sara","style":["modern","klassisch"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","musik"],"sounds":["s","a","weich"]},{"name":"David","style":["modern","klassisch"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["d","d"]},{"name":"Julia","style":["modern","klassisch"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["j","a","weich"]},{"name":"Ben","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["b","n"]},{"name":"Maya","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["m","a","weich"]},{"name":"Samuel","style":["zeitlos"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen","musik"],"sounds":["s","l"]},{"name":"Elena","style":["modern","zeitlos"],"culture":["international","spanisch"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["e","a","weich"]},{"name":"Liam","style":["modern","zeitlos"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["l","m"]},{"name":"Amelie","style":["zeitlos"],"culture":["international"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","natur"],"sounds":["a","e","weich"]},{"name":"Simon","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","musik"],"sounds":["s","n"]},{"name":"Johanna","style":["klassisch"],"culture":["international","deutsch"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen"],"sounds":["j","a","weich"]},{"name":"Julian","style":["modern"],"culture":["international","deutsch"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["j","n"]},{"name":"Mira","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["m","a","weich"]},{"name":"Gabriel","style":["modern"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["g","l"]},{"name":"Tilda","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","musik"],"sounds":["t","a","weich"]},{"name":"Oskar","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["o","r"]},{"name":"Isla","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["i","a","weich"]},{"name":"Anton","style":["modern","klassisch"],"culture":["international","schweizerisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["a","n"],"special":["old_swiss"],"aliases":["Toni"]},{"name":"Livia","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Leon","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["l","n"]},{"name":"Alina","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["a","a","weich"]},{"name":"Matteo","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["m","o"]},{"name":"Emilia","style":["modern"],"culture":["international","italienisch"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","natur"],"sounds":["e","a","weich"]},{"name":"Henry","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["h","y"]},{"name":"Greta","style":["modern"],"culture":["international","deutsch"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["g","a","weich"]},{"name":"Arthur","style":["klassisch"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["a","r"]},{"name":"Luisa","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Moritz","style":["modern"],"culture":["international","deutsch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["m","z"]},{"name":"Valentina","style":["modern"],"culture":["international"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen"],"sounds":["v","a","weich"]},{"name":"Jakob","style":["modern","klassisch"],"culture":["international","deutsch","schweizerisch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["j","b"],"special":["old_swiss"],"aliases":["Köbi"]},{"name":"Helena","style":["klassisch"],"culture":["international","deutsch"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen"],"sounds":["h","a","weich"]},{"name":"Alexander","style":["modern"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["a","r"]},{"name":"Sina","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","musik"],"sounds":["s","a","weich"]},{"name":"Raphael","style":["modern"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["r","l"]},{"name":"Paulina","style":["modern"],"culture":["international"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen"],"sounds":["p","a","weich"]},{"name":"Fabian","style":["modern"],"culture":["international","deutsch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","musik"],"sounds":["f","n"]},{"name":"Elisa","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["e","a","weich"]},{"name":"Nathan","style":["modern"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["n","n"]},{"name":"Aurelia","style":["modern"],"culture":["international"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","natur"],"sounds":["a","a","weich"]},{"name":"Vincent","style":["modern"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["v","t"]},{"name":"Chiara","style":["modern"],"culture":["international","italienisch"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","musik"],"sounds":["c","a","weich"]},{"name":"Adrian","style":["modern"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["a","n"]},{"name":"Sophie","style":["modern"],"culture":["international"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","musik"],"sounds":["s","e","weich"]},{"name":"Tom","style":["modern"],"culture":["international","deutsch"],"effect":["klar","stark"],"hobbies":["reisen","musik"],"sounds":["t","m"]},{"name":"Carla","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","musik"],"sounds":["c","a","weich"]},{"name":"Daniel","style":["klassisch"],"culture":["international","deutsch"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["d","l"]},{"name":"Olivia","style":["modern"],"culture":["international"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen"],"sounds":["o","a","weich"]},{"name":"Eric","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["e","c"]},{"name":"Jasmin","style":["modern"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["j","n"]},{"name":"Robin","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["r","n"]},{"name":"Amira","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["a","a","weich"]},{"name":"Nils","style":["modern"],"culture":["international","deutsch","nordisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["n","s"]},{"name":"Nadia","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["n","a","weich"]},{"name":"Jan","style":["modern"],"culture":["international","deutsch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["j","n"]},{"name":"Elin","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["e","n"]},{"name":"Mika","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["m","a","weich"]},{"name":"Yara","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["y","a","weich"]},{"name":"Joel","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["j","l"]},{"name":"Aylin","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["a","n"]},{"name":"Tim","style":["modern"],"culture":["international","deutsch"],"effect":["klar","stark"],"hobbies":["reisen","musik"],"sounds":["t","m"]},{"name":"Samira","style":["modern"],"culture":["international"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","musik"],"sounds":["s","a","weich"]},{"name":"Silas","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","musik"],"sounds":["s","s"]},{"name":"Zoe","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["z","e","weich"]},{"name":"Lars","style":["modern"],"culture":["international","nordisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["l","s"]},{"name":"Anouk","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["a","k"]},{"name":"Roman","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["r","n"]},{"name":"Noemi","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["n","i","weich"]},{"name":"Dario","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["d","o"]},{"name":"Juna","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["j","a","weich"]},{"name":"Timo","style":["modern"],"culture":["international","deutsch"],"effect":["klar","stark"],"hobbies":["reisen","musik"],"sounds":["t","o"]},{"name":"Malin","style":["modern"],"culture":["international","nordisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["m","n"]},{"name":"Nevio","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["n","o"]},{"name":"Fiona","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","musik"],"sounds":["f","a","weich"]},{"name":"Kian","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["k","n"]},{"name":"Elinor","style":["modern"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["e","r"]},{"name":"Lenny","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["l","y"]},{"name":"Malia","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["m","a","weich"]},{"name":"Mauro","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["m","o"]},{"name":"Amina","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["a","a","weich"]},{"name":"Rayan","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["r","n"]},{"name":"Lara","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Enea","style":["modern"],"culture":["international","italienisch"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["e","a","weich"]},{"name":"Liv","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["l","v"]},{"name":"Kilian","style":["modern"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["k","n"]},{"name":"Dalia","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["d","a","weich"]},{"name":"Loris","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["l","s"]},{"name":"Nela","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["n","a","weich"]},{"name":"Yann","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["y","n"]},{"name":"Liana","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Sandro","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","musik"],"sounds":["s","o"]},{"name":"Talia","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","musik"],"sounds":["t","a","weich"]},{"name":"Aurel","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["a","l"]},{"name":"Nayla","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["n","a","weich"]},{"name":"Diego","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["d","o"]},{"name":"Ines","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["i","s"]},{"name":"Tiago","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark"],"hobbies":["reisen","musik"],"sounds":["t","o"]},{"name":"Amalia","style":["modern"],"culture":["international"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","natur"],"sounds":["a","a","weich"]},{"name":"Rafael","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["r","l"]},{"name":"Bianca","style":["modern"],"culture":["international"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen"],"sounds":["b","a","weich"]},{"name":"Marco","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["m","o"]},{"name":"Teresa","style":["modern"],"culture":["international"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","musik"],"sounds":["t","a","weich"]},{"name":"Alessio","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["a","o"]},{"name":"Lucia","style":["modern"],"culture":["international","italienisch","spanisch"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Gioia","style":["modern"],"culture":["international","italienisch"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["g","a","weich"]},{"name":"Francesco","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","musik"],"sounds":["f","o"]},{"name":"Beatrice","style":["modern"],"culture":["international","italienisch"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen"],"sounds":["b","e","weich"]},{"name":"Antonio","style":["modern"],"culture":["international","italienisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["a","o"]},{"name":"Celia","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","musik"],"sounds":["c","a","weich"]},{"name":"Javier","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["j","r"]},{"name":"Marina","style":["modern"],"culture":["international","spanisch"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","natur"],"sounds":["m","a","weich"]},{"name":"Hugo","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["h","o"]},{"name":"Pablo","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["p","o"]},{"name":"Carlos","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","musik"],"sounds":["c","s"]},{"name":"Isabel","style":["modern"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["i","l"]},{"name":"Miguel","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["m","l"]},{"name":"Alba","style":["modern"],"culture":["international","spanisch"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["a","a","weich"]},{"name":"Sergio","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","musik"],"sounds":["s","o"]},{"name":"Vera","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["v","a","weich"]},{"name":"Nicolas","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["n","s"]},{"name":"Carmen","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","musik"],"sounds":["c","n"]},{"name":"Andres","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","natur"],"sounds":["a","s"]},{"name":"Aitana","style":["modern"],"culture":["international","spanisch"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","natur"],"sounds":["a","a","weich"]},{"name":"Thiago","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen","musik"],"sounds":["t","o"]},{"name":"Camila","style":["modern"],"culture":["international","spanisch"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","musik"],"sounds":["c","a","weich"]},{"name":"Bruno","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["b","o"]},{"name":"Lola","style":["modern"],"culture":["international","spanisch"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["l","a","weich"]},{"name":"Gael","style":["modern"],"culture":["international","spanisch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["g","l"]},{"name":"Valeria","style":["modern"],"culture":["international","spanisch"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen"],"sounds":["v","a","weich"]},{"name":"Dante","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["d","e","weich"]},{"name":"Kiara","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["k","a","weich"]},{"name":"Ezra","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["e","a","weich"]},{"name":"Naomi","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["n","i","weich"]},{"name":"Ethan","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["e","n"]},{"name":"Chloe","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","musik"],"sounds":["c","e","weich"]},{"name":"Oscar","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["o","r"]},{"name":"Grace","style":["modern"],"culture":["international","englisch"],"effect":["weich","freundlich"],"hobbies":["reisen"],"sounds":["g","e","weich"]},{"name":"Lucas","style":["modern","zeitlos"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["l","s"]},{"name":"Alice","style":["modern","klassisch"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["a","e","weich"]},{"name":"Oliver","style":["zeitlos"],"culture":["international"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["o","r"]},{"name":"Hazel","style":["modern"],"culture":["international","englisch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["h","l"]},{"name":"Jack","style":["modern"],"culture":["international","englisch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["j","k"]},{"name":"Ruby","style":["modern"],"culture":["international","englisch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["r","y"]},{"name":"James","style":["modern"],"culture":["international","englisch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["j","s"]},{"name":"Eva","style":["modern"],"culture":["international"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["e","a","weich"]},{"name":"Charlie","style":["modern"],"culture":["international","englisch"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen","musik"],"sounds":["c","e","weich"]},{"name":"Eden","style":["modern"],"culture":["international"],"effect":["klar","stark"],"hobbies":["reisen","natur"],"sounds":["e","n"]},{"name":"William","style":["modern"],"culture":["international","englisch"],"effect":["klar","stark","elegant"],"hobbies":["reisen"],"sounds":["w","m"]},{"name":"Freya","style":["modern"],"culture":["international","nordisch"],"effect":["weich","freundlich"],"hobbies":["reisen","musik"],"sounds":["f","a","weich"]},{"name":"George","style":["klassisch"],"culture":["international","englisch"],"effect":["weich","freundlich","elegant"],"hobbies":["reisen"],"sounds":["g","e","weich"]},{"name":"Harry","style":["modern"],"culture":["international","englisch"],"effect":["klar","stark"],"hobbies":["reisen"],"sounds":["h","y"]},{"name":"Elsie","style":["modern"],"culture":["international","englisch"],"effect":["weich","freundlich"],"hobbies":["reisen","natur"],"sounds":["e","e","weich"]},{"name":"Ueli","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["u","i"],"special":["old_swiss"],"longform":"Ulrich","aliases":["Ulrich"]},{"name":"Ruedi","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["r","i"],"special":["old_swiss"],"longform":"Rudolf","aliases":["Rudolf"]},{"name":"Köbi","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["k","i"],"special":["old_swiss"],"longform":"Jakob","aliases":["Jakob"]},{"name":"Sepp","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["s","p"],"special":["old_swiss"],"longform":"Josef","aliases":["Josef"]},{"name":"Res","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["r","s"],"special":["old_swiss"],"longform":"Andreas","aliases":["Andreas"]},{"name":"Fritz","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["f","z"],"special":["old_swiss"],"longform":"Friedrich","aliases":["Friedrich"]},{"name":"Hans","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["h","s"],"special":["old_swiss"],"longform":"Johannes","aliases":["Johannes"]},{"name":"Heiri","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["h","i"],"special":["old_swiss"],"longform":"Heinrich","aliases":["Heinrich"]},{"name":"Werni","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["w","i"],"special":["old_swiss"],"longform":"Werner","aliases":["Werner"]},{"name":"Wädi","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["w","i"],"special":["old_swiss"],"longform":"Walter","aliases":["Walter"]},{"name":"Toni","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["t","i"],"special":["old_swiss"],"longform":"Anton","aliases":["Anton"]},{"name":"Beni","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["b","i"],"special":["old_swiss"],"longform":"Benjamin","aliases":["Benjamin"]},{"name":"Vreni","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["v","i"],"special":["old_swiss"],"longform":"Verena","aliases":["Verena"]},{"name":"Bethli","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["b","i"],"special":["old_swiss"],"longform":"Elisabeth","aliases":["Elisabeth"]},{"name":"Rösli","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["r","i"],"special":["old_swiss"],"longform":"Rosa","aliases":["Rosa"]},{"name":"Trudi","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["t","i"],"special":["old_swiss"],"longform":"Gertrud","aliases":["Gertrud"]},{"name":"Hedi","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["h","i"],"special":["old_swiss"],"longform":"Hedwig","aliases":["Hedwig"]},{"name":"Margrit","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["m","t"],"special":["old_swiss"],"longform":"Margareta","aliases":["Margareta"]},{"name":"Annemarie","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["a","e"],"special":["old_swiss"],"longform":"Anna Maria","aliases":["Anna Maria"]},{"name":"Theres","style":["klassisch","selten"],"culture":["schweizerisch","deutsch"],"effect":["traditionell"],"hobbies":["natur"],"sounds":["t","s"],"special":["old_swiss"],"longform":"Theresia","aliases":["Theresia"]}];
+
+const BASE_WEIGHTS = {
+  liked:8,
+  style:6,
+  culture:5,
+  length:4,
+  sound:3,
+  effect:2,
+  hobbies:1,
+  special:7
+};
+
+let sessionWeights = {...BASE_WEIGHTS};
+let lastResults = [];
+
+const $ = id => document.getElementById(id);
+
+function norm(value){
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .trim();
+}
+
+function tokens(value){
+  return norm(value)
+    .split(/[,;/|]+|\s+/)
+    .map(x=>x.trim())
+    .filter(Boolean);
+}
+
+function selectedStyles(){
+  return [...document.querySelectorAll("#styleChecks input:checked")].map(x=>x.value);
+}
+
+function selectedSpecial(){
+  return [...document.querySelectorAll("#specialChecks input:checked")].map(x=>x.value);
+}
+
+function selectedLengths(){
+  return [...document.querySelectorAll("#lengthChecks input:checked")].map(x=>x.value);
+}
+
+function lengthClass(name){
+  const n = [...name].length;
+  if(n <= 4) return "kurz";
+  if(n <= 6) return "mittel";
+  return "lang";
+}
+
+function similarity(a,b){
+  a = norm(a); b = norm(b);
+  if(!a || !b) return 0;
+  if(a === b) return 1;
+  let score = 0;
+  if(a[0] === b[0]) score += .28;
+  if(a.slice(-1) === b.slice(-1)) score += .18;
+  const diff = Math.abs(a.length-b.length);
+  score += Math.max(0,.22-(diff*.04));
+  const aPairs = new Set([...Array(Math.max(0,a.length-1))].map((_,i)=>a.slice(i,i+2)));
+  const bPairs = new Set([...Array(Math.max(0,b.length-1))].map((_,i)=>b.slice(i,i+2)));
+  const overlap = [...aPairs].filter(x=>bPairs.has(x)).length;
+  const denom = Math.max(1, Math.max(aPairs.size,bPairs.size));
+  score += .32*(overlap/denom);
+  return Math.min(1,score);
+}
+
+function includesAny(haystack, needleTokens){
+  const arr = (haystack || []).map(norm);
+  return needleTokens.some(t => arr.some(v => v.includes(t) || t.includes(v)));
+}
+
+function scoreName(entry){
+  const blocked = new Set(tokens($("blocked").value));
+  if(blocked.has(norm(entry.name))) return null;
+
+  let score = 0;
+  const reasons = [];
+
+  const liked = tokens($("liked").value);
+  if(liked.length){
+    const candidates = [entry.name, ...(entry.aliases || [])];
+    const best = Math.max(...liked.flatMap(n=>candidates.map(c=>similarity(c,n))));
+    if(best > .28){
+      score += sessionWeights.liked * best;
+      reasons.push("ähnelt Namen, die dir bereits gefallen");
+    }
+  }
+
+  const styles = selectedStyles();
+  if(styles.length && styles.some(s=>(entry.style || []).includes(s))){
+    score += sessionWeights.style;
+    reasons.push("passt zur gewünschten Stilrichtung");
+  }
+
+  const specials = selectedSpecial();
+  if(specials.length && specials.some(s=>(entry.special || []).includes(s))){
+    score += sessionWeights.special;
+    reasons.push("passt zur Spezialisierung alte Schweizer Namen & Kurzformen");
+  }
+
+  const culture = tokens($("culture").value);
+  if(culture.length && includesAny(entry.culture || [],culture)){
+    score += sessionWeights.culture;
+    reasons.push("passt zum sprachlichen oder kulturellen Bezug");
+  }
+
+  const lengths = selectedLengths();
+  if(lengths.length && lengths.includes(lengthClass(entry.name))){
+    score += sessionWeights.length;
+    reasons.push("passt zur gewünschten Namenslänge");
+  }
+
+  const sound = tokens($("sound").value);
+  if(sound.length){
+    const n = norm(entry.name);
+    const raw = norm($("sound").value);
+    let soundMatch = sound.some(t =>
+      n.startsWith(t) || n.endsWith(t) ||
+      (entry.sounds || []).some(s=>norm(s).includes(t) || t.includes(norm(s)))
+    );
+    if(raw.includes("endet") && raw.includes("a")) soundMatch = n.endsWith("a");
+    if(raw.includes("weich") && (entry.sounds||[]).includes("weich")) soundMatch = true;
+    if(soundMatch){
+      score += sessionWeights.sound;
+      reasons.push("trifft einen gewünschten Buchstaben oder Klang");
+    }
+  }
+
+  const effect = tokens($("effect").value);
+  if(effect.length && includesAny(entry.effect || [],effect)){
+    score += sessionWeights.effect;
+    reasons.push("passt zur gewünschten Wirkung");
+  }
+
+  const hobbies = tokens($("hobbies").value);
+  if(hobbies.length && includesAny(entry.hobbies || [],hobbies)){
+    score += sessionWeights.hobbies;
+    reasons.push("greift eine persönliche Inspirationsrichtung auf");
+  }
+
+  return {entry,score,reasons};
+}
+
+
+const STORAGE_KEY = "kindernamensfinder_state_v2";
+
+function collectState(){
+  return {
+    liked: $("liked").value,
+    blocked: $("blocked").value,
+    culture: $("culture").value,
+    lengths: selectedLengths(),
+    sound: $("sound").value,
+    effect: $("effect").value,
+    hobbies: $("hobbies").value,
+    disturbed: $("disturbed").value,
+    boost: $("boost").value,
+    reduce: $("reduce").value,
+    styles: selectedStyles(),
+    specials: selectedSpecial(),
+    sessionWeights: sessionWeights
+  };
+}
+
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
+  }catch(err){
+    console.warn("Autospeichern nicht verfügbar:", err);
+  }
+}
+
+function restoreState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const state = JSON.parse(raw);
+
+    ["liked","blocked","culture","sound","effect","hobbies","disturbed"].forEach(id=>{
+      if(state[id] != null && $(id)) $(id).value = state[id];
+    });
+
+    document.querySelectorAll("#lengthChecks input").forEach(x=>{
+      const savedLengths = Array.isArray(state.lengths)
+        ? state.lengths
+        : (state.length ? [state.length] : []);
+      x.checked = savedLengths.includes(x.value);
+    });
+    if(state.boost != null) $("boost").value = state.boost;
+    if(state.reduce != null) $("reduce").value = state.reduce;
+
+    document.querySelectorAll("#styleChecks input").forEach(x=>{
+      x.checked = Array.isArray(state.styles) && state.styles.includes(x.value);
+    });
+
+    document.querySelectorAll("#specialChecks input").forEach(x=>{
+      x.checked = Array.isArray(state.specials) && state.specials.includes(x.value);
+    });
+
+    if(state.sessionWeights && typeof state.sessionWeights === "object"){
+      sessionWeights = {...BASE_WEIGHTS, ...state.sessionWeights};
+    }
+
+    $("status").textContent = "Gespeicherte Eingaben wiederhergestellt.";
+  }catch(err){
+    console.warn("Wiederherstellung nicht möglich:", err);
+  }
+}
+
+function clearSavedState(){
+  try{
+    localStorage.removeItem(STORAGE_KEY);
+  }catch(err){
+    console.warn("Gespeicherter Stand konnte nicht gelöscht werden:", err);
+  }
+}
+
+function runFinder(){
+  try {
+    const scored = NAMES
+      .map(scoreName)
+      .filter(Boolean)
+      .sort((a,b)=>b.score-a.score || a.entry.name.localeCompare(b.entry.name,"de-CH"));
+
+    if(!scored.length){
+      $("status").textContent = "Es konnten keine Vorschläge berechnet werden.";
+      return;
+    }
+
+    const positive = scored.filter(x=>x.score>0);
+
+    // Even with sparse input, show alternatives from the available pool.
+    lastResults = (positive.length ? positive : scored).slice(0,9);
+
+    const list = $("resultList");
+    list.innerHTML = "";
+
+    lastResults.forEach((item,index)=>{
+      const div = document.createElement("article");
+      div.className = "name-card";
+      const reasons = item.reasons.length
+        ? `<ul class="reasons">${item.reasons.map(r=>`<li>${r}</li>`).join("")}</ul>`
+        : `<p class="small">Zusätzliche Alternative aus dem aktuellen Namenspool.</p>`;
+
+      div.innerHTML = `
+        <div class="name">${item.entry.name}</div>
+        ${item.entry.longform ? `<div class="small">Schweizer Kurz-/Rufname zu ${item.entry.longform}</div>` : ""}
+        <div class="score">Rang ${index+1} · Gewichtungswert ${item.score.toFixed(2)}</div>
+        ${reasons}
+      `;
+      list.appendChild(div);
+    });
+
+    $("results").style.display = "block";
+    $("feedback").style.display = "block";
+    $("rerunBox").style.display = "none";
+    $("status").textContent = `${lastResults.length} Vorschläge erstellt.`;
+    saveState();
+    $("results").scrollIntoView({behavior:"smooth",block:"start"});
+  } catch (err) {
+    console.error(err);
+    $("status").textContent = "Der Namensfinder konnte nicht gestartet werden. Bitte Seite neu laden.";
+  }
+}
+
+function applyFeedback(){
+  const boost = $("boost").value;
+  const reduce = $("reduce").value;
+
+  if(boost && sessionWeights[boost] != null){
+    sessionWeights[boost] *= 1.6;
+  }
+  if(reduce && sessionWeights[reduce] != null){
+    sessionWeights[reduce] *= 0.6;
+  }
+
+  const disturbed = norm($("disturbed").value);
+  if(disturbed.includes("modern")){
+    if(!document.querySelector('#styleChecks input[value="klassisch"]').checked &&
+       !document.querySelector('#styleChecks input[value="zeitlos"]').checked){
+      document.querySelector('#styleChecks input[value="zeitlos"]').checked = true;
+    }
+    sessionWeights.style *= 1.25;
+  }
+  if(disturbed.includes("lang")){
+    document.querySelectorAll("#lengthChecks input").forEach(x=>x.checked = x.value !== "lang");
+    sessionWeights.length *= 1.25;
+  }
+  if(disturbed.includes("kurz")){
+    document.querySelectorAll("#lengthChecks input").forEach(x=>x.checked = x.value !== "kurz");
+    sessionWeights.length *= 1.25;
+  }
+  if(disturbed.includes("kultur") || disturbed.includes("sprach")){
+    sessionWeights.culture *= 1.25;
+  }
+  if(disturbed.includes("klang")){
+    sessionWeights.sound *= 1.25;
+  }
+
+  saveState();
+  runFinder();
+}
+
+
+function initFinder(){
+  $("runBtn").addEventListener("click", runFinder);
+
+  $("resetBtn").addEventListener("click",()=>{
+    ["liked","blocked","culture","sound","effect","hobbies","disturbed"].forEach(id=>$(id).value="");
+    $("boost").value="";
+    $("reduce").value="";
+    document.querySelectorAll("#styleChecks input, #specialChecks input, #lengthChecks input").forEach(x=>x.checked=false);
+    sessionWeights = {...BASE_WEIGHTS};
+    $("results").style.display="none";
+    $("feedback").style.display="none";
+    $("rerunBox").style.display="none";
+    clearSavedState();
+    $("status").textContent=`Bereit · ${NAMES.length} Namen im Pool`;
+  });
+
+  $("rerunToggle").addEventListener("click",()=>{
+    $("rerunBox").style.display = $("rerunBox").style.display === "none" ? "block" : "none";
+  });
+
+  $("rerunBtn").addEventListener("click",applyFeedback);
+
+  ["liked","blocked","culture","sound","effect","hobbies","disturbed"].forEach(id=>{
+    $(id).addEventListener("input", saveState);
+  });
+
+  ["boost","reduce"].forEach(id=>{
+    $(id).addEventListener("change", saveState);
+  });
+
+  document.querySelectorAll("#styleChecks input, #specialChecks input, #lengthChecks input").forEach(x=>{
+    x.addEventListener("change", saveState);
+  });
+
+  $("satisfiedBtn").addEventListener("click",()=>{
+    $("status").textContent = "Auswahl abgeschlossen.";
+    saveState();
+    $("feedback").style.display = "none";
+    $("results").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+
+  restoreState();
+  if(!$("status").textContent || $("status").textContent === "Finder wird geladen …"){
+    $("status").textContent=`Bereit · ${NAMES.length} Namen im Pool`;
+  }
+}
+
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", initFinder);
+}else{
+  initFinder();
+}
+
+</script>
+</body>
+</html>
