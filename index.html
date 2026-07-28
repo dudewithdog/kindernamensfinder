@@ -288,6 +288,7 @@
       <h2>Spezialisierung</h2>
       <div class="checks" id="specialChecks">
         <label><input type="checkbox" value="old_swiss">alte Schweizer Namen & Kurzformen</label>
+        <label><input type="checkbox" value="no_swiss">keine Schweizer Namen</label>
       </div>
       <p class="small">Bevorzugt traditionelle Schweizer Namen sowie gebräuchliche schweizerdeutsche Ruf- und Kurzformen. Kurzform und Langform werden miteinander verknüpft.</p>
     </div>
@@ -477,8 +478,20 @@ function genderAllowed(entry){
   return entry.gender === wanted;
 }
 
+function swissExcluded(entry){
+  const noSwiss = selectedSpecial().includes("no_swiss");
+  if(!noSwiss) return false;
+  const culture = (entry.culture || []).map(norm);
+  const special = (entry.special || []).map(norm);
+  const origin = norm(entry.origin || "");
+  return culture.includes("schweizerisch") ||
+         special.includes("old_swiss") ||
+         origin.includes("schweizerdeutsch");
+}
+
 function scoreName(entry){
   if(!genderAllowed(entry)) return null;
+  if(swissExcluded(entry)) return null;
   const blocked = new Set(tokens($("blocked").value));
   if(blocked.has(norm(entry.name))) return null;
 
@@ -764,7 +777,15 @@ function initFinder(){
   });
 
   document.querySelectorAll("#genderChecks input, #styleChecks input, #specialChecks input, #lengthChecks input").forEach(x=>{
-    x.addEventListener("change", saveState);
+    x.addEventListener("change", ()=>{
+      if(x.closest("#specialChecks")){
+        const oldSwiss = document.querySelector('#specialChecks input[value="old_swiss"]');
+        const noSwiss = document.querySelector('#specialChecks input[value="no_swiss"]');
+        if(x.value === "old_swiss" && x.checked && noSwiss) noSwiss.checked = false;
+        if(x.value === "no_swiss" && x.checked && oldSwiss) oldSwiss.checked = false;
+      }
+      saveState();
+    });
   });
 
   $("satisfiedBtn").addEventListener("click",()=>{
